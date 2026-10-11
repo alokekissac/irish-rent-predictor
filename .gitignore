@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+
+# Data & experiment tracking (reproducible via `make pipeline`)
+data/raw/
+mlruns/
+mlartifacts/
+mlflow.db
+
+# Env / OS
+.env
+.DS_Store
+.ipynb_checkpoints/

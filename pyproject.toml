@@ -1,0 +1,54 @@
+[project]
+name = "rentcast"
+version = "0.1.0"
+description = "12-month rent forecasts for every RTB location in Ireland (LightGBM + conformal intervals, FastAPI, Streamlit)"
+readme = "README.md"
+authors = [
+    { name = "aloke" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.142.2",
+    "joblib>=1.6.0",
+    "lightgbm>=4.7.0",
+    "mlflow>=3.17.0",
+    "pandas>=3.0.6",
+    "plotly>=7.1.0",
+    "pyarrow>=25.0.1",
+    "pydantic>=2.13.5",
+    "pydantic-settings>=2.15.0",
+    "requests>=2.34.2",
+    "scikit-learn>=1.9.1",
+    "shap>=0.52.0",
+    "streamlit>=1.65.0",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.23,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.13.1",
+    "pre-commit>=4.6.2",
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]
+
+[project.scripts]
+rentcast-ingest = "rentcast.data.ingest:main"
+rentcast-transform = "rentcast.data.transform:main"
+rentcast-train = "rentcast.train:main"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "N", "PD", "NPY", "RUF"]
+ignore = ["N803", "N806", "RUF005", "E402", "RUF001", "RUF002", "RUF003"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

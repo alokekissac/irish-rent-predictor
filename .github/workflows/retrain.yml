@@ -1,0 +1,36 @@
+name: Retrain on fresh data
+
+# RTB/CSO publish quarterly; the Property Price Register updates continuously.
+on:
+  schedule:
+    - cron: "0 6 1 * *"  # 06:00 UTC on the 1st of each month
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync --locked
+      - name: Ingest, transform, train
+        run: |
+          uv run rentcast-ingest
+          uv run rentcast-transform
+          uv run rentcast-train
+      - run: uv run pytest
+      - name: Open PR with refreshed model
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: bot/retrain
+          title: "Retrain: refreshed RTB + PPR data"
+          commit-message: "Retrain model on latest RTB and PPR data"
+          body-path: reports/metrics.json
+          add-paths: |
+            data/processed
+            models
+            reports
