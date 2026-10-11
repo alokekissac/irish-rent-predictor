@@ -1,10 +1,27 @@
 # RentCast Ireland 🏠
 
-**12-month rent forecasts for every RTB-tracked area in Ireland**, with calibrated uncertainty ranges, served through a REST API and an interactive dashboard.
+**12-month rent forecasts for every RTB-tracked area in Ireland**, with calibrated uncertainty ranges, an explainable "why", what-if scenarios and an affordability finder, served through a REST API and an interactive dashboard.
 
 Ireland's rental crisis is one of the country's defining issues. Average rents have more than doubled since 2011. This project turns the official public data into forward-looking, area-level forecasts that a renter, a policy analyst or a housing body could actually use.
 
-![Dashboard overview](docs/images/overview.png)
+![Interactive county map](docs/images/map.png)
+
+## Interactive dashboard
+
+Six linked pages. A selection made on one page (a county clicked on the map, a row in a table) carries over to the others.
+
+| Page | What you can do |
+|---|---|
+| 🗺️ **Map** | Click any county to drill into its towns and neighbourhoods; recolour by forecast rent, forecast growth or past growth; press ▶ to animate rents from 2008 to today |
+| 🔎 **Forecast explorer** | History plus 12-month forecast and ~80% range; overlay the model's **past forecasts vs what actually happened**; **"Why this forecast?"** SHAP waterfall; **what-if sliders** (county or national momentum, house-price growth) that re-run the model live |
+| 💶 **Where can I afford?** | Enter take-home pay, budget share and flatmates; see a diverging map of rent-to-income by county, the areas within budget, and which areas the forecast says will **price you out within 12 months** |
+| ⚖️ **Compare areas** | Up to three areas side by side, in € or indexed to 100, with forecast ranges |
+| 🏆 **League table** | Filter and rank all ~3,300 series, with sparklines, search and CSV export; click a row to open it |
+| 📊 **Model performance** | Slice the backtest by county, area type or bedrooms: error, bias, interval coverage, forecast-vs-actual scatter |
+
+| Explainable forecasts and what-if | Affordability finder |
+|---|---|
+| ![Why this forecast](docs/images/why.png) | ![Affordability](docs/images/afford.png) |
 
 ## Results
 
@@ -55,7 +72,7 @@ flowchart LR
 |---|---|
 | Data & ML | Python 3.12, pandas, scikit-learn, LightGBM, SHAP |
 | MLOps | MLflow (SQLite backend), scheduled retraining via GitHub Actions |
-| Serving | FastAPI + Pydantic (OpenAPI docs), Streamlit + Plotly |
+| Serving | FastAPI + Pydantic (OpenAPI docs), Streamlit multipage app + Plotly (choropleths, click events, animation) |
 | Engineering | uv, pytest, ruff, pre-commit, Docker, Docker Compose, GitHub Actions CI |
 
 ## Quickstart
@@ -90,7 +107,6 @@ curl -X POST localhost:8000/forecast -H 'content-type: application/json' \
 }
 ```
 
-![Forecast explorer](docs/images/explorer.png)
 
 ## Project structure
 
@@ -103,7 +119,9 @@ src/rentcast/
   train.py             baselines, LightGBM, CQR intervals, ablation, MLflow
   predict.py           Forecaster used by both API and dashboard
   api/main.py          FastAPI service
-dashboard/app.py       Streamlit app
+dashboard/app.py       Streamlit multipage entry point
+dashboard/views/       map, explorer, affordability, compare, league table, model pages
+dashboard/assets/      simplified county boundaries (scripts/build_counties_geojson.py)
 tests/                 unit tests (parsing, mapping, leakage) + API tests
 .github/workflows/     CI (lint, test, Docker smoke test) and monthly retrain
 ```
@@ -111,6 +129,7 @@ tests/                 unit tests (parsing, mapping, leakage) + API tests
 ## Data sources
 
 - **RTB Rent Index:** average monthly rent of new tenancies, quarterly 2007Q4–2025Q4. Published by the Residential Tenancies Board via the [CSO PxStat API](https://data.cso.ie/table/RIQ02), CC BY 4.0.
+- **County boundaries:** [Tailte Éireann, National Statutory Boundaries 2019](https://data.gov.ie/dataset/counties-national-statutory-boundaries-2019-generalised-20m1), CC BY 4.0, reprojected and simplified to 61 KB.
 - **Residential Property Price Register:** every residential sale in Ireland since 2010, from the [Property Services Regulatory Authority](https://www.propertypriceregister.ie). Only full-market-price sales are used.
 
 ## Limitations & next steps

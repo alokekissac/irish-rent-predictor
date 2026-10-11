@@ -93,6 +93,24 @@ class Forecaster:
             growth_pct=round(float(row["growth_pct"]), 2),
         )
 
+    def row(self, location: str, beds: str = "All bedrooms", property_type: str = "All property types") -> pd.DataFrame:
+        """Latest feature row for one series (a one-row frame, editable for what-if scenarios)."""
+        key = (location, beds, property_type)
+        if key not in self._index:
+            raise UnknownSeriesError(f"No RTB data for {property_type} / {beds} in {location}")
+        return self.latest.iloc[[self._index.get_loc(key)]].copy()
+
+    def explain(self, rows: pd.DataFrame) -> pd.DataFrame:
+        """Per-feature SHAP contributions to predicted log growth, plus the model's base value."""
+        import shap
+
+        X = to_model_frame(rows, self.bundle["categories"])
+        explainer = shap.TreeExplainer(self.bundle["point"])
+        values = explainer.shap_values(X)
+        out = pd.DataFrame(values, columns=X.columns, index=rows.index)
+        out["base_value"] = float(np.ravel(explainer.expected_value)[0])
+        return out
+
     def forecast_all(self) -> pd.DataFrame:
         return self.predict_frame(self.latest)
 

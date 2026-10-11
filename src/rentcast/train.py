@@ -173,6 +173,17 @@ def main() -> None:
         results["test_interval_coverage_pct"] = coverage(test[TARGET], lo - conformal_pad, hi + conformal_pad)
         results["conformal_pad"] = conformal_pad
 
+        # Persist backtest forecasts so the dashboard can show predicted vs actual per series
+        backtest = test[[*SERIES_KEY, "county", "level", "quarter", "target_quarter", "rent", TARGET]].assign(
+            actual_rent=lambda d: d["rent"] * np.exp(d[TARGET]),
+            pred_rent=test["rent"] * np.exp(model.predict(Xte)),
+            lower_rent=test["rent"] * np.exp(np.minimum(lo - conformal_pad, model.predict(Xte))),
+            upper_rent=test["rent"] * np.exp(np.maximum(hi + conformal_pad, model.predict(Xte))),
+        )
+        backtest.drop(columns=[TARGET]).astype({"quarter": str, "target_quarter": str}).to_parquet(
+            settings.reports_dir / "backtest.parquet", index=False
+        )
+
         mlflow.log_metric("best_rounds", best_rounds)
         mlflow.log_metrics(results)
         plot_importance(model, figs / "feature_importance.png")
