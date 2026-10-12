@@ -22,6 +22,7 @@ jobs:
           uv run rentcast-ingest
           uv run rentcast-transform
           uv run rentcast-train
+          uv run rentcast-export-web
       - run: uv run pytest
       - name: Open PR with refreshed model
         uses: peter-evans/create-pull-request@v7
@@ -34,3 +35,4 @@ jobs:
             data/processed
             models
             reports
+            web/public/data

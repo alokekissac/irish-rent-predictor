@@ -40,6 +40,7 @@ dev = [
 rentcast-ingest = "rentcast.data.ingest:main"
 rentcast-transform = "rentcast.data.transform:main"
 rentcast-train = "rentcast.train:main"
+rentcast-export-web = "rentcast.export_web:main"
 
 [tool.ruff]
 line-length = 120
