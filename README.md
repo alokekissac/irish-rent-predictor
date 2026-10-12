@@ -4,9 +4,13 @@
 
 Ireland's rental crisis is one of the country's defining issues. Average rents have more than doubled since 2011. This project turns the official public data into forward-looking, area-level forecasts that a renter, a policy analyst or a housing body could actually use.
 
+### 🔗 Live demo: **[rentcast-ireland.vercel.app](https://rentcast-ireland.vercel.app)**
+
 ![Interactive county map](docs/images/map.png)
 
 ## Interactive dashboard
+
+The live site is a static React + TypeScript app on Vercel: no server, so it loads fast and never sleeps. Training exports everything it needs to JSON (`rentcast.export_web`): forecasts, history, SHAP breakdowns, backtests, and what-if response curves (the model re-run on a grid of values for each slider). A Streamlit version of the same dashboard is in `dashboard/` for local exploration.
 
 Six linked pages. A selection made on one page (a county clicked on the map, a row in a table) carries over to the others.
 
@@ -72,7 +76,7 @@ flowchart LR
 |---|---|
 | Data & ML | Python 3.12, pandas, scikit-learn, LightGBM, SHAP |
 | MLOps | MLflow (SQLite backend), scheduled retraining via GitHub Actions |
-| Serving | FastAPI + Pydantic (OpenAPI docs), Streamlit multipage app + Plotly (choropleths, click events, animation) |
+| Serving | FastAPI + Pydantic (OpenAPI docs); React + TypeScript + Vite + Plotly.js static site on Vercel (auto-deploys from `main`); Streamlit for local exploration |
 | Engineering | uv, pytest, ruff, pre-commit, Docker, Docker Compose, GitHub Actions CI |
 
 ## Quickstart
@@ -81,8 +85,9 @@ Requires [uv](https://docs.astral.sh/uv/).
 
 ```bash
 make install     # dependencies + pre-commit hooks
-make pipeline    # download data, clean, train (~1 min)
-make dashboard   # http://localhost:8501
+make pipeline    # download data, clean, train, export web JSON (~1 min)
+make web-dev     # React app at http://localhost:5173 (needs Node 22)
+make dashboard   # Streamlit version at http://localhost:8501
 make api         # http://localhost:8000/docs
 make mlflow      # experiment runs at http://localhost:5000
 make test
@@ -117,13 +122,15 @@ src/rentcast/
   data/transform.py    cleaning, area→county mapping, market aggregates
   features.py          leakage-safe feature engineering
   train.py             baselines, LightGBM, CQR intervals, ablation, MLflow
-  predict.py           Forecaster used by both API and dashboard
+  predict.py           Forecaster used by the API, dashboards and export
+  export_web.py        precomputes JSON for the static web app
   api/main.py          FastAPI service
+web/                   React + TypeScript app deployed on Vercel (data in web/public/data)
 dashboard/app.py       Streamlit multipage entry point
 dashboard/views/       map, explorer, affordability, compare, league table, model pages
 dashboard/assets/      simplified county boundaries (scripts/build_counties_geojson.py)
 tests/                 unit tests (parsing, mapping, leakage) + API tests
-.github/workflows/     CI (lint, test, Docker smoke test) and monthly retrain
+.github/workflows/     CI (lint, test, web build, Docker smoke test) and monthly retrain
 ```
 
 ## Data sources
@@ -138,4 +145,4 @@ tests/                 unit tests (parsing, mapping, leakage) + API tests
 - Add policy signals: Rent Pressure Zone status, and CSO population and housing-completion data.
 - Use rolling or adaptive conformal calibration to fix the interval under-coverage.
 - Try a global deep-learning forecaster (e.g. N-BEATS or TFT) as a challenger model.
-- Deploy to Azure Container Apps or AWS App Runner behind the existing Docker image.
+- Host the FastAPI service (e.g. Azure Container Apps or AWS App Runner) so what-if combinations re-run the model exactly.
